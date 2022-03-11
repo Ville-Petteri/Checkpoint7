@@ -54,6 +54,19 @@ resource "azurerm_network_security_group" "nsg-subnet1" {
     destination_address_prefix = "*"
 
     }
+
+security_rule {
+    name                       = "allow_http"
+    priority                   = 110
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "tcp"
+    source_port_range          = "*"
+    destination_port_range     = "80"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+
+    }
 }
 resource "azurerm_subnet_network_security_group_association" "nsg-subnet1-association" {
   subnet_id                 = azurerm_subnet.subnet1.id
@@ -94,6 +107,28 @@ resource "azurerm_network_interface" "VM01-nic" {
     name                          = "subnet1"
     subnet_id                     = azurerm_subnet.subnet1.id
     private_ip_address_allocation = "Dynamic"
-    #public_ip_address_id          = azurerm_public_ip.pip1.id
+    public_ip_address_id          = azurerm_public_ip.VM01-pip.id
   }
+}
+
+resource "azurerm_public_ip" "VM01-pip" {
+  name                = "LS01-pip"
+  resource_group_name = var.resource_group_name
+  location            = var.region
+  allocation_method   = "Static"
+}
+
+resource "azurerm_virtual_machine_extension" "VM01-vme" {
+  virtual_machine_id         = azurerm_linux_virtual_machine.VM01.id
+  name                       = "LS01-vme"
+  publisher                  = "Microsoft.Azure.Extensions"
+  type                       = "CustomScript"
+  type_handler_version       = "2.0"
+  auto_upgrade_minor_version = true
+
+  settings = <<SETTINGS
+{
+  "commandToExecute": "sudo apt-get update && apt-get install -y apache2 && sudo apt install jq && curl -H Metadata:true --noproxy \"*\" \"http://169.254.169.254/metadata/instance?api-version=2021-02-01\" | sudo tee myfile.txt && cat myfile.txt > /var/www/html/index.html"
+}
+SETTINGS
 }
