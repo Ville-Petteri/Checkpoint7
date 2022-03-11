@@ -128,7 +128,7 @@ resource "azurerm_virtual_machine_extension" "VM01-vme" {
 
   settings = <<SETTINGS
 {
-  "commandToExecute": "sudo apt-get update && apt-get install -y apache2 && sudo apt install jq && curl -H Metadata:true --noproxy \"*\" \"http://169.254.169.254/metadata/instance?api-version=2021-02-01\" | sudo tee myfile.txt && cat myfile.txt > /var/www/html/index.html"
+  "commandToExecute": "sudo apt-get update && apt install python-pip && pip install --upgrade pip && pip install flask && git clone https://github.com/runeli/assesment-test &&flask run --host=0.0.0.0 --port=80"
 }
 SETTINGS
 }
